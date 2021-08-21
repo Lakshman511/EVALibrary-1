@@ -93,6 +93,20 @@ def msssim(img1, img2, window_size=11, size_average=True, val_range=None, normal
     pow1 = mcs ** weights
     pow2 = mssim ** weights
     # From Matlab implementation https://ece.uwaterloo.ca/~z70wang/research/iwssim/
-    output = torch.prod(pow1[:-1] * pow2[-1])
-    return output
+    output = torch
 
+
+def rms(pred,target):
+  res = pred-tar
+  res = res**2
+  res.sum().item()
+
+
+def threshold(pred,tar):
+  res1 = pred/tar
+  res2 = tar/pred
+  res = torch.max(res1,res2)
+  delta1 = (res<1.25).sum().item()
+  delta2 = (res<1.25**2).sum().item()
+  delta3 = (res<1.25**2).sum().item()
+  return (delta1,delta2,delta3)
