@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
-from loss import ssim, msssim
+from loss import ssim, msssim,rms,threshold
 from utils import saveresults, show
 import gc
 
@@ -22,6 +22,8 @@ class Train:
     self.criterion1 = criterion1
     self.criterion2 = criterion2
     self.tb = tb
+    self.rms_lst = []
+    self.threshold_lst = []
 
   def run(self):
     self.model.train()
@@ -35,7 +37,10 @@ class Train:
       
       
       mask_pred, depth_pred = self.model(bg,fgbg)
-      
+      self.rms_lst.append(rms(mask_pred,mask))
+      self.rms_lst.append(rms(depth_pred,depth))
+      self.threshold_lst.append(threshold(mask_pred,mask))
+      self.threshold_lst.append(threshold(depth_pred,depth))
 
       # Calculate loss
       if self.criterion1 is not None:
@@ -97,11 +102,13 @@ class Train:
       
       #lr =  if self.scheduler else (self.optimizer.lr_scheduler.get_last_lr()[0] if self.optimizer.lr_scheduler else self.optimizer.param_groups[0]['lr'])
       #print('lr for this batch:", lr)
+
       self.stats.add_batch_train_stats(loss.item(), 0, len(data), lr)
       pbar.set_description(self.stats.get_latest_batch_desc())
       if self.scheduler:
         self.scheduler.step()
-      
+    print(self.rms_lst)
+    print(self.threshold_lst)  
 
 class Test:
   def __init__(self, model, dataloader, stats, scheduler=None, criterion1=None, criterion2=None, tb=None):
