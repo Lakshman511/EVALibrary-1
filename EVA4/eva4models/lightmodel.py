@@ -96,7 +96,7 @@ class UpSampling(Net):
 class Encoder(Net):
   def __init__(self):
     super(Encoder, self).__init__()
-    self.conv1 = self.create_conv2d(in_channels=6, out_channels=32, kernel_size=3, stride=1, padding=1)
+    self.conv1 = self.create_conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1)
     self.down1= DownSampling(32, 64)
     self.down2 = DownSampling(64,128)
     self.down3 = DownSampling(128, 256)
