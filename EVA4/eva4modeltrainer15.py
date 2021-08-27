@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
-from loss import ssim, msssim,rms,threshold
+from loss import ssim, msssim,compute_errors
 from utils import saveresults, show
 import gc
 
@@ -22,25 +22,25 @@ class Train:
     self.criterion1 = criterion1
     self.criterion2 = criterion2
     self.tb = tb
-    self.rms_lst = []
-    self.threshold_lst = []
+    self.images_data = [[],[],[],[]]
 
   def run(self):
     self.model.train()
     pbar = tqdm_notebook(enumerate(self.dataloader))
     for batch_idx, data in pbar:
       # get samples
-      bg, fgbg, mask, depth = data['bg'].to(self.model.device), data['fgbg'].to(self.model.device), data['mask'].to(self.model.device), data['depth'].to(self.model.device)
+      fgbg, mask, depth = data['fgbg'].to(self.model.device), data['mask'].to(self.model.device), data['depth'].to(self.model.device)
 
       # Init
       self.optimizer.zero_grad()
       
       
-      mask_pred, depth_pred = self.model(bg,fgbg)
-      self.rms_lst.append(rms(mask_pred,mask))
-      self.rms_lst.append(rms(depth_pred,depth))
-      self.threshold_lst.append(threshold(mask_pred,mask))
-      self.threshold_lst.append(threshold(depth_pred,depth))
+      mask_pred, depth_pred = self.model(fgbg)
+      for i in range(len(fgbg)):
+        self.images_data[0].append(mask[i])
+	self.images_data[1].append(depth[i])
+	self.images_data[2].append(mask_pred[i])
+	self.images_data[3].append(depth_pred[i])
 
       # Calculate loss
       if self.criterion1 is not None:
@@ -107,9 +107,16 @@ class Train:
       pbar.set_description(self.stats.get_latest_batch_desc())
       if self.scheduler:
         self.scheduler.step()
-    print(self.rms_lst)
-    print(self.threshold_lst)  
-
+    predictions1 = np.stack(self.images_data[2], axis=0)
+    testSetDepths1 = np.stack(self.images_data[0], axis=0)
+    predictions2 = np.stack(self.images_data[1], axis=0)
+    testSetDepths2 = np.stack(self.images_data[3], axis=0)
+    e1 = compute_errors(predictions1, testSetDepths1)
+    e2 = compute_errors(predictions2, testSetDepths2)
+    print("train Quantitative measures (a1, a2, a3, abs_rel, rmse, log_10)  1.mask 2.depth")
+    print(*e1)
+    print(*e2)
+	
 class Test:
   def __init__(self, model, dataloader, stats, scheduler=None, criterion1=None, criterion2=None, tb=None):
     self.model = model
@@ -120,17 +127,21 @@ class Test:
     self.criterion1 = criterion1
     self.criterion2 = criterion2
     self.tb = tb
-	
+    self.images_data = [[],[],[],[]]
 
   def run(self):
     self.model.eval()
     with torch.no_grad():
         
         for batch_idx, data in enumerate(self.dataloader):
-            bg, fgbg, mask, depth = data['bg'].to(self.model.device), data['fgbg'].to(self.model.device), data['mask'].to(self.model.device), data['depth'].to(self.model.device)
+            fgbg, mask, depth =  data['fgbg'].to(self.model.device), data['mask'].to(self.model.device), data['depth'].to(self.model.device)
             
             mask_pred, depth_pred = self.model(bg, fgbg)
-            
+            for i in range(len(fgbg)):
+	        self.images_data[0].append(mask[i])
+		self.images_data[1].append(depth[i])
+	        self.images_data[2].append(mask_pred[i])
+	        self.images_data[3].append(depth_pred[i])
             # Calculate loss
             if self.criterion1 is not None:
               loss1 = self.criterion1(mask_pred, mask)
@@ -165,7 +176,15 @@ class Test:
         if self.scheduler and isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
               #print("hello yes i am ")
               self.scheduler.step(self.loss)
-
+    predictions1 = np.stack(self.images_data[2], axis=0)
+    testSetDepths1 = np.stack(self.images_data[0], axis=0)
+    predictions2 = np.stack(self.images_data[1], axis=0)
+    testSetDepths2 = np.stack(self.images_data[3], axis=0)
+    e1 = compute_errors(predictions1, testSetDepths1)
+    e2 = compute_errors(predictions2, testSetDepths2)
+    print("test Quantitative measures (a1, a2, a3, abs_rel, rmse, log_10)  1.mask 2.depth")
+    print(*e1)
+    print(*e2)
             
 class ModelTrainer:
   def __init__(self, model, optimizer, train_loader, test_loader, statspath, scheduler=None, batch_scheduler=False, criterion1=None, criterion2=None, L1lambda = 0):
