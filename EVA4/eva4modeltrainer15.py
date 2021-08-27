@@ -69,7 +69,7 @@ class Train:
       if n%500 == 0:
         self.tb.add_scalar('loss/train', loss.item(), n)
       
-      if (n+1) % 3000 == 0:
+      if (n+1) % 30 == 0:#Need to change this later
         grid = torchvision.utils.make_grid(mask_pred.detach().cpu(), nrow=8, normalize=False)
         self.tb.add_image('imagesmask', grid, n)
         grid = torchvision.utils.make_grid(depth_pred.detach().cpu(), nrow=8, normalize=False)
@@ -137,7 +137,7 @@ class Test:
         for batch_idx, data in enumerate(self.dataloader):
             fgbg, mask, depth =  data['fgbg'].to(self.model.device), data['mask'].to(self.model.device), data['depth'].to(self.model.device)
             
-            mask_pred, depth_pred = self.model(bg, fgbg)
+            mask_pred, depth_pred = self.model(fgbg)
             for i in range(len(fgbg)):
               self.images_data[0].append(mask[i].detach().cpu())
               self.images_data[1].append(depth[i].detach().cpu())
