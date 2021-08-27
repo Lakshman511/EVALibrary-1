@@ -160,8 +160,7 @@ class S15Model(Net):
     self.decoder2 = DepthDecoder()
     self.init_params()
         
-  def forward(self, x1, x2):
-    x = torch.cat([x1, x2], dim=1)
+  def forward(self, x):
     e = self.encoder(x)
     mask = self.decoder1(*e)
     depth = self.decoder2(*e)
