@@ -93,7 +93,8 @@ def msssim(img1, img2, window_size=11, size_average=True, val_range=None, normal
     pow1 = mcs ** weights
     pow2 = mssim ** weights
     # From Matlab implementation https://ece.uwaterloo.ca/~z70wang/research/iwssim/
-    output = torch
+    output = torch.prod(pow1[:-1] * pow2[-1])
+    return output
 
 def compute_errors(gt, pred):
     thresh = np.maximum((gt / pred), (pred / gt))
