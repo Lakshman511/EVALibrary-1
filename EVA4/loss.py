@@ -95,18 +95,13 @@ def msssim(img1, img2, window_size=11, size_average=True, val_range=None, normal
     # From Matlab implementation https://ece.uwaterloo.ca/~z70wang/research/iwssim/
     output = torch
 
-
-def rms(pred,target):
-  res = pred-tar
-  res = res**2
-  res.sum().item()
-
-
-def threshold(pred,tar):
-  res1 = pred/tar
-  res2 = tar/pred
-  res = torch.max(res1,res2)
-  delta1 = (res<1.25).sum().item()
-  delta2 = (res<1.25**2).sum().item()
-  delta3 = (res<1.25**2).sum().item()
-  return (delta1,delta2,delta3)
+def compute_errors(gt, pred):
+    thresh = np.maximum((gt / pred), (pred / gt))
+    a1 = (thresh < 1.25   ).mean()
+    a2 = (thresh < 1.25 ** 2).mean()
+    a3 = (thresh < 1.25 ** 3).mean()
+    abs_rel = np.mean(np.abs(gt - pred) / gt)
+    rmse = (gt - pred) ** 2
+    rmse = np.sqrt(rmse.mean())
+    log_10 = (np.abs(np.log10(gt)-np.log10(pred))).mean()
+    return a1, a2, a3, abs_rel, rmse, log_10
