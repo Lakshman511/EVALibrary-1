@@ -28,9 +28,9 @@ def displayData(data, i):
   im1 = Image.open(data[i][0])
   im2 = Image.open(data[i][1])
   im3 = Image.open(data[i][2])
-  im4 = Image.open(data[i][3])
-  print(im1.size, im2.size, im3.size, im4.size)
-  images = [im1, im2, im3, im4]
+
+  print(im1.size, im2.size, im3.size)
+  images = [im1, im2, im3]
   widths, heights = zip(*(i.size for i in images))
   
   total_width = sum(widths)+30
