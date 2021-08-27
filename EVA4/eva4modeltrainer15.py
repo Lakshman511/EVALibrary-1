@@ -37,11 +37,7 @@ class Train:
       
       
       mask_pred, depth_pred = self.model(fgbg)
-      for i in range(len(fgbg)):
-        self.images_data[0].append(mask[i].cpu())
-        self.images_data[1].append(depth[i].cpu())
-        self.images_data[2].append(mask_pred[i].cpu())
-        self.images_data[3].append(depth_pred[i].cpu())
+     
 
       # Calculate loss
       if self.criterion1 is not None:
@@ -91,7 +87,11 @@ class Train:
       # Backpropagation
       loss.backward()
       self.optimizer.step()
-
+       for i in range(len(fgbg)):
+        self.images_data[0].append(mask[i].detach().cpu())
+        self.images_data[1].append(depth[i].detach().cpu())
+        self.images_data[2].append(mask_pred[i].detach().cpu())
+        self.images_data[3].append(depth_pred[i].detach().cpu())
       # Update pbar-tqdm
       
       lr = 0.0
@@ -139,10 +139,10 @@ class Test:
             
             mask_pred, depth_pred = self.model(bg, fgbg)
             for i in range(len(fgbg)):
-              self.images_data[0].append(mask[i].cpu())
-              self.images_data[1].append(depth[i].cpu())
-              self.images_data[2].append(mask_pred[i].cpu())
-              self.images_data[3].append(depth_pred[i].cpu())
+              self.images_data[0].append(mask[i].detach().cpu())
+              self.images_data[1].append(depth[i].detach().cpu())
+              self.images_data[2].append(mask_pred[i].detach().cpu())
+              self.images_data[3].append(depth_pred[i].detach().cpu())
             # Calculate loss
             if self.criterion1 is not None:
               loss1 = self.criterion1(mask_pred, mask)
