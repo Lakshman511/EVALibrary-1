@@ -6,11 +6,6 @@ import torch
 from matplotlib import pyplot as plt
 
 def prepareData(root):
-  path = root+"/bgimages/"
-  bgimages = []
-  bgimages.extend([path+f for f in os.listdir(path) for i in range(4000)])
-  bgimages.sort()
-
   path = root+"/out2/images/"
   fgbgimages = [ (path+f) for f in os.listdir(path)]
   fgbgimages.sort()
@@ -23,9 +18,9 @@ def prepareData(root):
   depthimages = [ (path+f) for f in os.listdir(path)]
   depthimages.sort()
   #print(len(bgimages))
-  #return([bgimages, fgbgimages, maskimages, depthimages])
-  dataset = list(zip(bgimages, fgbgimages, maskimages, depthimages))
-  #dataset = list(zip(bgimages[:25000], fgbgimages[:25000], maskimages[:25000], depthimages[:25000]))
+  #return([fgbgimages, maskimages, depthimages])
+  dataset = list(zip(fgbgimages, maskimages, depthimages))
+  #dataset = list(zip(fgbgimages[:25000], maskimages[:25000], depthimages[:25000]))
   random.shuffle(dataset)
   return dataset
 
