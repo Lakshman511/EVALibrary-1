@@ -87,7 +87,7 @@ class Train:
       # Backpropagation
       loss.backward()
       self.optimizer.step()
-       for i in range(len(fgbg)):
+      for i in range(len(fgbg)):
         self.images_data[0].append(mask[i].detach().cpu())
         self.images_data[1].append(depth[i].detach().cpu())
         self.images_data[2].append(mask_pred[i].detach().cpu())
